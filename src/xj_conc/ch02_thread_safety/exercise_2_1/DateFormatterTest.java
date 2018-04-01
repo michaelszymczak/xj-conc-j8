@@ -62,7 +62,8 @@ public class DateFormatterTest {
 
     @Test
     public void testAnnotation() throws InterruptedException {
+        ThreadSafe annotation = DateFormatter.class.getAnnotation(ThreadSafe.class);
         assertNotNull("Class should be annotated as @ThreadSafe",
-            DateFormatter.class.getAnnotation(ThreadSafe.class));
+            annotation);
     }
 }

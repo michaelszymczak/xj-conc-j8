@@ -17,7 +17,9 @@ public class ByteGeneratorTest {
         ByteGenerator g = new ByteGenerator();
         IntStream.range(0, 10).forEach(
             n -> IntStream.rangeClosed(Byte.MIN_VALUE, Byte.MAX_VALUE).
-                forEach(i -> assertEquals(i, g.nextValue())));
+                forEach(i -> {
+                    assertEquals(i, g.nextValue());
+                }));
     }
 
 

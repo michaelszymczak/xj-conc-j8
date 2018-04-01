@@ -10,26 +10,12 @@ import java.util.concurrent.atomic.*;
  * @author Neeme Praks
  */
 public class ByteGenerator {
-    private static final int INITIAL_VALUE = Byte.MIN_VALUE - 1;
 
-    private final AtomicInteger counter = new AtomicInteger(INITIAL_VALUE);
-    private final AtomicInteger resetCounter = new AtomicInteger(0);
+    private final AtomicInteger counter = new AtomicInteger(Byte.MIN_VALUE - 1);
 
     private final Object lock = new Object();
 
     public byte nextValue() {
-        int next = counter.incrementAndGet();
-        if (next > Byte.MAX_VALUE) {
-            synchronized (lock) {
-                int i = counter.get();
-                // if value is still larger than max byte value, we reset it
-                if (i > Byte.MAX_VALUE) {
-                    counter.set(INITIAL_VALUE);
-                    resetCounter.incrementAndGet();
-                }
-                next = counter.incrementAndGet();
-            }
-        }
-        return (byte) next;
+        return (byte) counter.incrementAndGet();
     }
 }

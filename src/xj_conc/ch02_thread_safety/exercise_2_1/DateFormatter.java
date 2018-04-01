@@ -8,15 +8,15 @@ import java.util.*;
 /**
  * Solve thread safety by using thread confinement.
  */
-@NotThreadSafe
+@ThreadSafe
 public class DateFormatter {
-    private final DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+    private static final ThreadLocal<DateFormat> df = ThreadLocal.withInitial(() -> new SimpleDateFormat("yyyy-MM-dd"));
 
     public String format(Date date) {
-        return df.format(date);
+        return df.get().format(date);
     }
 
     public Date parse(String date) throws ParseException {
-        return df.parse(date);
+        return df.get().parse(date);
     }
 }
