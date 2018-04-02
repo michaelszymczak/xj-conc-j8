@@ -18,20 +18,27 @@ public class ClientTest {
         SuperSimpleGCParser.showGCLogSummaryAtExit();
         ExecutorService pool = Executors.newCachedThreadPool();
         Future<?> future = pool.submit(() -> {
+            Every every = new Every("A", 1_000_000);
             long time = System.currentTimeMillis();
             Client client = new Client();
             IntStream.range(0, 100_000_000).forEach(
-                i -> client.checkAlerts()
+                i -> {
+                    every.execute();
+                    client.checkAlerts();
+                }
             );
             time = System.currentTimeMillis() - time;
             System.out.println("checkForConcurrentModificationException() iteration done in " + time + "ms");
         });
         pool.submit(() -> {
+            long c = 0;
+            Every every = new Every("B", 1_000_000);
             long time = System.currentTimeMillis();
             AlertProvider prov = AlertProvider.getInstance();
             Alert alert = new Alert("fly loose in the server room", AlertLevel.GREEN);
             IntStream.range(0, 100_000_000).forEach(
                 i -> {
+                    every.execute();
                     prov.addAlert(alert);
                     prov.removeAlert(alert);
                 }

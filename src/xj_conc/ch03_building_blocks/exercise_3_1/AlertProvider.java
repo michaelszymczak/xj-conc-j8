@@ -1,6 +1,7 @@
 package xj_conc.ch03_building_blocks.exercise_3_1;
 
 import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * TODO: We need to avoid the ConcurrentModification exception in Client class.
@@ -8,8 +9,7 @@ import java.util.*;
  * @see Client
  */
 public class AlertProvider {
-    private final List<Alert> alerts = Collections.synchronizedList(
-        new ArrayList<>(10));
+        private final List<Alert> alerts = new CopyOnWriteArrayList<>();
 
     public Collection<Alert> getAlerts() {
         return Collections.unmodifiableCollection(alerts);
