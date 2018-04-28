@@ -2,7 +2,12 @@ package xj_conc.ch04_task_execution.exercise_4_1;
 
 import xj_conc.math.*;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.*;
+
+import static java.util.concurrent.Executors.newFixedThreadPool;
 
 /**
  * Instead of constructing a separate thread for each number, we want to rather
@@ -16,20 +21,39 @@ public class ParallelFactorizer {
 
         // Change this block of code only:
         AtomicLong next = new AtomicLong(start);
-        Thread[] threads = new Thread[numbersToCheck];
-        for (int i = 0; i < threads.length; i++) {
-            threads[i] = new Thread(() -> {
-                long number = next.getAndIncrement();
-                long[] factors = Factorizer.factor(number);
-                if (factors.length == 1) {
-                    primes.increment();
-                }
-            });
-            threads[i].start();
+        final ExecutorService executorService = newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+        for (int i = 0; i < numbersToCheck; i++) {
+            executorService.submit(new PrimesDetector(primes, next));
         }
-        for (Thread thread : threads) {
-            thread.join();
-        }
+        awaitCompletion(executorService);
+
         return primes.intValue();
+    }
+
+    private void awaitCompletion(ExecutorService executorService) throws InterruptedException {
+        executorService.shutdown();
+        while (!executorService.isTerminated()) {
+            Thread.sleep(100);
+        }
+    }
+
+    static class PrimesDetector implements Runnable {
+
+        private final LongAdder sharedPrimesCount;
+        private final AtomicLong sharedNumbersToCheck;
+
+        public PrimesDetector(LongAdder sharedPrimesCount, AtomicLong sharedNumbersToCheck) {
+            this.sharedPrimesCount = sharedPrimesCount;
+            this.sharedNumbersToCheck = sharedNumbersToCheck;
+        }
+
+        @Override
+        public void run() {
+            long number = sharedNumbersToCheck.getAndIncrement();
+            long[] factors = Factorizer.factor(number);
+            if (factors.length == 1) {
+                sharedPrimesCount.increment();
+            }
+        }
     }
 }
