@@ -6,8 +6,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.*;
+import java.util.stream.IntStream;
+import java.util.stream.LongStream;
 
 import static java.util.concurrent.Executors.newFixedThreadPool;
+import static java.util.stream.LongStream.range;
 
 /**
  * Instead of constructing a separate thread for each number, we want to rather
@@ -20,40 +23,10 @@ public class ParallelFactorizer {
         LongAdder primes = new LongAdder();
 
         // Change this block of code only:
-        AtomicLong next = new AtomicLong(start);
-        final ExecutorService executorService = newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-        for (int i = 0; i < numbersToCheck; i++) {
-            executorService.submit(new PrimesDetector(primes, next));
-        }
-        awaitCompletion(executorService);
-
-        return primes.intValue();
-    }
-
-    private void awaitCompletion(ExecutorService executorService) throws InterruptedException {
-        executorService.shutdown();
-        while (!executorService.isTerminated()) {
-            Thread.sleep(100);
-        }
-    }
-
-    static class PrimesDetector implements Runnable {
-
-        private final LongAdder sharedPrimesCount;
-        private final AtomicLong sharedNumbersToCheck;
-
-        public PrimesDetector(LongAdder sharedPrimesCount, AtomicLong sharedNumbersToCheck) {
-            this.sharedPrimesCount = sharedPrimesCount;
-            this.sharedNumbersToCheck = sharedNumbersToCheck;
-        }
-
-        @Override
-        public void run() {
-            long number = sharedNumbersToCheck.getAndIncrement();
-            long[] factors = Factorizer.factor(number);
-            if (factors.length == 1) {
-                sharedPrimesCount.increment();
-            }
-        }
+        return (int) range(start, start + numbersToCheck)
+            .parallel()
+            .mapToInt(numberToCheck -> Factorizer.factor(numberToCheck).length)
+            .filter(found -> found == 1)
+            .count();
     }
 }
